@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: uv run python examples/crash_recovery.py
       - run: uv run python examples/fork_conversation.py
       - run: uv run python examples/approval_override.py
