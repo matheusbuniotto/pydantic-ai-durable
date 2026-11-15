@@ -1,18 +1,18 @@
-# ⚡ pydantic-ai-durable
+# pydantic-ai-durable
 
 [![CI](https://github.com/matheusbuniotto/pydantic-ai-durable/actions/workflows/ci.yml/badge.svg)](https://github.com/matheusbuniotto/pydantic-ai-durable/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/pydantic-ai-durable)](https://pypi.org/project/pydantic-ai-durable/)
 [![Python](https://img.shields.io/pypi/pyversions/pydantic-ai-durable)](https://pypi.org/project/pydantic-ai-durable/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Crash-proof, stateful, and malleable agents for [PydanticAI](https://github.com/pydantic/pydantic-ai).**  
-> Complete Python implementation of Earendil's [@earendil-works/pi-durable](https://github.com/earendil-works) architecture.
+> **Stateful, durable, and malleable agents for [PydanticAI](https://github.com/pydantic/pydantic-ai).**  
+> Python implementation of Earendil's [@earendil-works/pi-durable](https://github.com/earendil-works) architecture.
 
 ---
 
-### 🧠 The Problem vs The Fix
+### The Problem vs The Fix
 
-| Without pydantic-ai-durable 💥 | With pydantic-ai-durable 🛡️ |
+| Without pydantic-ai-durable | With pydantic-ai-durable |
 | :--- | :--- |
 | **Process restarts or crashes?** Everything is lost. | **Turns auto-resume** from their last checkpoint. |
 | **Crashes during a tool call?** Retrying double-charges cards. | **Replay safety:** Safe tools re-fetch; mutating tools never duplicate. |
@@ -22,7 +22,7 @@
 
 ---
 
-### 💥 See it survive a crash (offline, 10 seconds)
+### See it survive a crash (offline, ~10 seconds)
 
 ```bash
 git clone https://github.com/matheusbuniotto/pydantic-ai-durable && cd pydantic-ai-durable
@@ -34,18 +34,18 @@ Run 1: starting (will crash during deploy)
   [tool] running step: provision
   [tool] running step: migrate
   [tool] running step: deploy
-  [tool] 💥 process killed mid-deploy (simulated kill -9)
+  [tool] process killed mid-deploy (simulated kill -9)
 
 Run 2: restarting the same process
-  ♻️  recovered task: unsafe tools sealed (NOT re-run): 1, safe tools replayed: 0
+  recovered task: unsafe tools sealed (NOT re-run): 1, safe tools replayed: 0
 ```
 
-The mutating `deploy` step is never silently repeated; safe read-only tools are replayed.
+The mutating `deploy` step is not silently repeated; safe read-only tools are replayed.
 More in [`examples/`](examples/): [crash recovery](examples/crash_recovery.py), [forking a conversation](examples/fork_conversation.py), [approval gate with argument override](examples/approval_override.py) (an overeager agent tries to `DROP TABLE users`; the operator redirects it to `users_backup`).
 
 ---
 
-## 🚀 30-Second Quickstart
+## 30-Second Quickstart
 
 ```bash
 uv pip install pydantic-ai-durable   # or: pip install pydantic-ai-durable
@@ -66,6 +66,7 @@ import pya_durable as pad
 
 ```python
 import asyncio
+import os
 from pydantic_ai_durable import (
     Harness,
     SqliteStorage,
@@ -77,8 +78,8 @@ from pydantic_ai_durable import (
 async def main():
     # 1. Pluggable Auth & Providers (OpenRouter, OpenAI, Anthropic, Gemini, Groq, Ollama)
     models = create_models()
-    models.set_provider(openrouter_provider(api_key="sk-or-..."))
-    # or models.set_provider("openai", api_key="sk-...")
+    models.set_provider(openrouter_provider(api_key=os.environ["OPENROUTER_API_KEY"]))
+    # or models.set_provider("openai", api_key=os.environ["OPENAI_API_KEY"])
 
     # 2. Open durable harness over SQLite WAL storage
     harness = await Harness.open(SqliteStorage("agent.db"), models=models)
@@ -101,7 +102,7 @@ asyncio.run(main())
 
 ---
 
-## 🎯 Cheat Sheet: Which Feature Do I Need?
+## Cheat Sheet: Which Feature Do I Need?
 
 | If you want to... | Use this | What it does |
 | :--- | :--- | :--- |
@@ -116,11 +117,11 @@ asyncio.run(main())
 
 ---
 
-## 🧱 Core Patterns (Copy & Paste)
+## Core Patterns (Copy & Paste)
 
-### 1. 🛡️ Durable Tools: Safe Replay vs Unsafe Mutating Guard
+### 1. Durable Tools: Safe Replay vs Unsafe Mutating Guard
 
-Declare tool replay safety so crashes never cause accidental side-effects:
+Declare tool replay safety so crashes are less likely to cause accidental side-effects:
 
 ```python
 from pydantic_ai_durable import durable_tool, set_tool_partial_output
@@ -142,7 +143,7 @@ async def charge_customer(amount: int, customer_id: str) -> str:
 
 ---
 
-### 2. ⏸️ Human Approval Gates & Argument Overrides
+### 2. Human Approval Gates & Argument Overrides
 
 Pause turn execution for sensitive operations and wait for human operator intervention:
 
@@ -167,7 +168,7 @@ await harness.resolve_approval(
 
 ---
 
-### 3. 🔁 Durable Task Sagas with Reverse Compensation
+### 3. Durable Task Sagas with Reverse Compensation
 
 Orchestrate complex distributed workflows with parallel fan-out and automatic reverse rollback:
 
@@ -198,7 +199,7 @@ class ProvisionClusterSaga:
 
 ---
 
-### 4. 🌲 Zero-Copy Transcript Branching (Forking)
+### 4. Zero-Copy Transcript Branching (Forking)
 
 Branch a conversation off any historical message in `O(1)` time without duplicating database rows:
 
@@ -218,7 +219,7 @@ await asyncio.gather(
 
 ---
 
-### 5. 👥 Real-Time Multiplayer Streaming & View State
+### 5. Real-Time Multiplayer Streaming & View State
 
 Connect TUIs, web dashboards, and mobile clients with reactive state subscriptions:
 
@@ -237,7 +238,7 @@ async for event in harness.watch_events():
 
 ---
 
-### 6. 🗄️ Pluggable Storage Backends
+### 6. Pluggable Storage Backends
 
 Switch backends effortlessly based on your deployment tier:
 
@@ -256,7 +257,7 @@ audit_storage = JsonlStorage("audit_trail.jsonl")
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 ```
                       ┌────────────────────────────────────────────────────────┐
@@ -285,9 +286,9 @@ audit_storage = JsonlStorage("audit_trail.jsonl")
 
 ---
 
-## ⚖️ Full Pi Durable Parity Table
+## Pi Durable Parity Table
 
-`pydantic-ai-durable` brings 100% of Earendil's TypeScript framework to Python and PydanticAI:
+The table below tracks alignment with Earendil's TypeScript **pi-durable** framework (status is best-effort, not a formal certification):
 
 | Architectural Pillar | Pi Durable (TypeScript) | PyA Durable (Python) | Status |
 | :--- | :--- | :--- | :---: |
@@ -315,19 +316,19 @@ audit_storage = JsonlStorage("audit_trail.jsonl")
 
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
-Every pull request is verified across unit test suites, and real AI provider evaluations:
+Every pull request is verified across unit test suites and optional real-provider evaluations:
 
 ```bash
-# Run 148 unit & behavioral tests
+# Run the unit & behavioral test suite (151 tests at last count)
 uv run pytest
 
 # Run the 9 core behavioral evaluations (high-fidelity fallback)
 uv run python evals/run_evals.py
 
-# Run evaluations with OpenRouter & GPT-6 Luna
-OPENROUTER_API_KEY=sk-or-v1-... uv run python evals/run_evals.py
+# Run evaluations with OpenRouter & GPT-6 Luna (set OPENROUTER_API_KEY first)
+uv run python evals/run_evals.py
 
 # Or specify model shortcuts directly
 uv run python evals/run_evals.py --model "gpt-luna 6"
