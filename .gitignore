@@ -10,3 +10,7 @@ build/
 *.db-shm
 .ruff_cache/
 .agents/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
